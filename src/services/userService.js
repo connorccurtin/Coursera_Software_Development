@@ -1,21 +1,34 @@
+/**
+ * src/services/userService.js
+ * Service layer for user operations such as registration and authentication.
+ */
+
 const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../config/env');
 
-// Business logic for user operations
-class UserService {
-    // Fetch a user by their ID
-    static async getUserById(userId) {
-        return await User.findById(userId);
+/**
+ * Creates a new user in the database.
+ */
+exports.createUser = async (userData) => {
+    const user = new User(userData);
+    return await user.save();
+};
+
+/**
+ * Authenticates a user and returns a JWT.
+ */
+exports.authenticateUser = async ({ username, password }) => {
+    const user = await User.findOne({ username });
+    if (!user || !(await user.matchPassword(password))) {
+        throw new Error('Invalid credentials');
     }
+    return jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+};
 
-    // Update user information
-    static async updateUser(userId, updateData) {
-        return await User.findByIdAndUpdate(userId, updateData, { new: true });
-    }
-
-    // Delete a user
-    static async deleteUser(userId) {
-        return await User.findByIdAndDelete(userId);
-    }
-}
-
-module.exports = UserService;
+/**
+ * Verifies a JWT token.
+ */
+exports.verifyToken = async (token) => {
+    return jwt.verify(token, JWT_SECRET);
+};

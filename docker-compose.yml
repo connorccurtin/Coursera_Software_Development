@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: user-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: userdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  app:
+    build: .
+    container_name: user-app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/userdb
+      JWT_SECRET: your_jwt_secret
+      PORT: 5000
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
